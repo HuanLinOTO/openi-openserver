@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenI File Explorer</title>
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0px, 1fr));
+        }
+        .item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+    <script>
+        window.download = async (uuid) => {
+          await fetch("/direct2down?uuid=" + uuid).then(res => res.json()).then(res => {
+            // 将 res.url 复制到剪贴板
+            const input = document.createElement("input")
+            input.value = res.url
+            document.body.appendChild(input)
+            input.select()
+            document.execCommand("copy")
+            document.body.removeChild(input)
+            alert("已复制到剪贴板")
+          })
+        }
+        const getFiles = async () => {
+            const files = await fetch("/files").then(res => res.json())
+            let result = ""
+            for (const repo in files) {
+                const file = files[repo]
+                result += `<h3>${repo}</h3><div class="container">`
+                for (const { name,uuid } of file) {
+                    result += `<div class="item">${name} <button onclick="download('${uuid}')">下载</button></div>`
+                }
+                result+="</div>"
+            }
+            // console.log(result);
+            document.getElementById("files").innerHTML = result
+        }
+        getFiles()
+    </script>
+</head>
+<body>
+    <h1>点击即可获取下载链接</h1>
+    <hr>
+    <div id="files"></div>
+</body>
+</html>
