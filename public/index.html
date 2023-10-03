@@ -5,10 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenI File Explorer</title>
     <style>
-        .container {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0px, 1fr));
+        @media (max-width: 768px) {
+            .container {
+                display: grid;
+                grid-template-columns: repeat(1, minmax(0px, 1fr));
+            }
         }
+        @media (min-width: 768px) {
+            .container {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0px, 1fr));
+            }
+        }
+        .container .item button {
+            padding: 5px;
+            border: none;
+            background: #ccc;
+            border-radius: 5px;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+            
         .item {
             padding: 10px;
             border: 1px solid #ccc;
@@ -18,40 +35,61 @@
             align-items: center;
             justify-content: space-between;
         }
+
+        .title {
+            margin: 10px;
+        }
     </style>
     <script>
-        window.download = async (uuid) => {
+        window.download = async (uuid, type, name) => {
           await fetch("/direct2down?uuid=" + uuid).then(res => res.json()).then(res => {
             // 将 res.url 复制到剪贴板
             const input = document.createElement("input")
-            input.value = res.url
+            if (type == 1)
+                input.value = res.url
+            else
+                input.value = `wget -O ${name} "${res.url}"`
             document.body.appendChild(input)
             input.select()
             document.execCommand("copy")
             document.body.removeChild(input)
-            alert("已复制到剪贴板")
+            if (type == 1)
+                alert("已复制到剪贴板")
+            else
+                alert("已复制下载命令到剪贴板")
           })
+          return false;
         }
         const getFiles = async () => {
             const files = await fetch("/files").then(res => res.json())
             let result = ""
             for (const repo in files) {
                 const file = files[repo]
-                result += `<h3>${repo}</h3><div class="container">`
+                result += `<h3 class="title">📁${repo}</h3><div class="container">`
                 for (const { name,uuid } of file) {
-                    result += `<div class="item">${name} <button onclick="download('${uuid}')">下载</button></div>`
+                    result += `<div class="item">${name} <button class="download-btn" onclick="download('${uuid}',1)" oncontextmenu="download('${uuid}', 2, '${name}')">下载</button></div>`
                 }
                 result+="</div>"
             }
             // console.log(result);
             document.getElementById("files").innerHTML = result
+            for (const ele of document.getElementsByClassName("download-btn")) {
+                ele.addEventListener("contextmenu", (e) => {
+                    e.preventDefault()
+                })
+            }
         }
         getFiles()
     </script>
 </head>
 <body>
-    <h1>点击即可获取下载链接</h1>
+    <h1>OpenI File Explorer</h1>
+    <li>左键点击复制下载链接</li>
+    <li>右键获取下载命令</li>
     <hr>
     <div id="files"></div>
+    <footer>
+        author: <a href="https://github.com/HuanLinOTO">@多玩幻灵QWQ</a>
+    </footer>
 </body>
 </html>
