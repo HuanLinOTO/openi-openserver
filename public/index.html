@@ -1,95 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenI File Explorer</title>
     <style>
-        @media (max-width: 768px) {
-            .container {
-                display: grid;
-                grid-template-columns: repeat(1, minmax(0px, 1fr));
-            }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        @media (min-width: 768px) {
-            .container {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0px, 1fr));
-            }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
         }
-        .container .item button {
+
+        hr {
+            margin: 30px 0;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        .item {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .item:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .item h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .item p {
+            margin: 10px 0;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .item button {
             padding: 5px;
             border: none;
             background: #ccc;
             border-radius: 5px;
             border: 1px solid #000;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-            
-        .item {
-            padding: 10px;
-            border: 1px solid #ccc;
-            margin: 10px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+
+        .item button:hover {
+            background: #000;
+            color: #fff;
         }
 
         .title {
-            margin: 10px;
+            margin: 50px 0 20px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        footer a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
         }
     </style>
     <script>
         window.download = async (uuid, type, name) => {
-          await fetch("/direct2down?uuid=" + uuid).then(res => res.json()).then(res => {
-            // 将 res.url 复制到剪贴板
-            const input = document.createElement("input")
-            if (type == 1)
-                input.value = res.url
-            else
-                input.value = `wget -O ${name} "${res.url}"`
-            document.body.appendChild(input)
-            input.select()
-            document.execCommand("copy")
-            document.body.removeChild(input)
-            if (type == 1)
-                alert("已复制到剪贴板")
-            else
-                alert("已复制下载命令到剪贴板")
-          })
-          return false;
+
+
+            await fetch("/direct2down?uuid=" + uuid).then(res => res.json()).then(res => {
+                // 将 res.url 复制到剪贴板
+                const input = document.createElement("input")
+                if (type == 1)
+                    input.value = res.url
+                else
+                    input.value = `wget -O ${name} "${res.url}"`
+                document.body.appendChild(input)
+                input.select()
+                document.execCommand("copy")
+                document.body.removeChild(input)
+            })
+            return false;
         }
         const getFiles = async () => {
             const files = await fetch("/files").then(res => res.json())
             let result = ""
             for (const repo in files) {
                 const file = files[repo]
-                result += `<h3 class="title">📁${repo}</h3><div class="container">`
-                for (const { name,uuid } of file) {
-                    result += `<div class="item">${name} <button class="download-btn" onclick="download('${uuid}',1)" oncontextmenu="download('${uuid}', 2, '${name}')">下载</button></div>`
+                result += `<h2 class="title">📁${repo}</h2><div class="container">`
+                for (const { name, uuid } of file) {
+                    result += `<div class="item"><h3>${name}</h3><p>UUID: ${uuid}</p><button class="download-btn" data-uuid="${uuid}" data-name="${name}">下载</button></div>`
                 }
-                result+="</div>"
+                result += "</div><div class=\"hrhrhr\"></div>"
             }
             // console.log(result);
             document.getElementById("files").innerHTML = result
             for (const ele of document.getElementsByClassName("download-btn")) {
                 ele.addEventListener("contextmenu", (e) => {
+                    let { uuid, name } = e.target.dataset
+                    download(uuid, 2, name)
+                    e.target.innerHTML = "复制下载链接成功"
+                    setTimeout(() => {
+                        e.target.innerHTML = "下载"
+                    }, 1000)
                     e.preventDefault()
+                })
+                ele.addEventListener("click", (e) => {
+                    let { uuid } = e.target.dataset
+                    download(uuid, 1)
+                    e.target.innerHTML = "复制成功"
+                    setTimeout(() => {
+                        e.target.innerHTML = "下载"
+                    }, 1000)
+                    // console.log(e);
                 })
             }
         }
         getFiles()
     </script>
 </head>
+
 <body>
     <h1>OpenI File Explorer</h1>
-    <li>左键点击复制下载链接</li>
-    <li>右键获取下载命令</li>
+    <div style="text-align: center;">
+        <p>左键点击复制下载链接</p>
+        <p>右键获取下载命令</p>
+    </div>
     <hr>
     <div id="files"></div>
     <footer>
         author: <a href="https://github.com/HuanLinOTO">@多玩幻灵QWQ</a>
     </footer>
 </body>
+
 </html>
