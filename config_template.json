@@ -3,5 +3,6 @@
     "repos": [
         "HuanLin/so-vits-svc",
         "HuanLin/SupperPower"
-    ]
+    ],
+    "cache_duration": 3600000
 }
