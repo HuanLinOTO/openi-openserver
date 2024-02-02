@@ -9,6 +9,11 @@ class OpenIAPI {
 
     constructor(token: string, repos: string[]) {
         this._token = token;
+        if (!token) {
+            // 读取环境变量 OPENI_TOKEN
+            this._token = process.env.OPENI_TOKEN;
+            console.log("[INFO] Using token from environment variable OPENI_TOKEN");
+        }
         this._repos = repos;
     }
 
